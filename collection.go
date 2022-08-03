@@ -284,18 +284,6 @@ func (c *Collection) Init() (*Collection, error) {
 		return nil, fmt.Errorf("nil decoder")
 	}
 
-	// Register the record if the encoder or decoder implements
-	// the Registrar interface.
-	reg, ok := c.Encoder.(Registrar)
-	if ok {
-		reg.Register(c.record)
-	} else {
-		reg, ok := c.Decoder.(Registrar)
-		if ok {
-			reg.Register(c.record)
-		}
-	}
-
 	// Ensure the destination directory exists.
 	_, dirPerm := c.filePerms()
 	os.MkdirAll(c.fullpath(), dirPerm)
@@ -414,6 +402,43 @@ func (c *Collection) Query(f func(any) bool) (res []any, err error) {
 	}
 
 	return res, nil
+}
+
+func (c *Collection) QueryPaginated(f func(any) bool, page int, rows int) (res []any, err error) {
+	if !c.initialized {
+		return nil, ErrNotInitialized
+	}
+
+	recs, err := c.Query(f)
+	if err != nil {
+		return res, err
+	}
+	// Return everything if page and row are 0.
+	if page == 0 && rows == 0 {
+		return res, nil
+	}
+
+	// Check the pagination request.
+	count := len(recs)
+	pages := count / rows
+	if count%rows != 0 {
+		pages++
+	}
+
+	// If the requested page is larger than the pages we have
+	// then return the last page.
+	if page > pages {
+		page = pages
+	}
+
+	// Calculate what to return.
+	from := (page * rows) - rows
+	to := (page * rows)
+	if to > count {
+		to = count
+	}
+
+	return recs[from:to], nil
 }
 
 // Get receives a record from disk by the provided ID

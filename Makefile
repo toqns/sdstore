@@ -1,4 +1,4 @@
-VERSION := 0.1.0
+VERSION := 0.2.0
 
 # ==============================================================================
 # Modules support
@@ -36,5 +36,5 @@ test:
 	staticcheck -checks=all ./...
 
 test-verbose:
-	go test ./... -race -count=1 -v
+	go test ./... -v -race -count=1
 	staticcheck -checks=all ./...

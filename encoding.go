@@ -10,12 +10,6 @@ type Decoder interface {
 	Decode([]byte, any) error
 }
 
-// Registrar is an interface that store encoders/decoders may implement to
-// perform registration of data objects.
-type Registrar interface {
-	Register(any) error
-}
-
 // EncoderFunc is a function providing encoding functionality.
 type EncoderFunc func(any) ([]byte, error)
 

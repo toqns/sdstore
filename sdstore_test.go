@@ -22,7 +22,7 @@ type Record struct {
 }
 
 func TestStore(t *testing.T) {
-	t.Cleanup(func() { os.RemoveAll("/tmp/store") })
+	t.Cleanup(func() { os.RemoveAll("/tmp/test") })
 
 	store, err := sdstore.New("store", "/tmp/test")
 	if err != nil {
@@ -30,7 +30,7 @@ func TestStore(t *testing.T) {
 	}
 	t.Logf("%s\tShould be able to create a new store.", success)
 
-	c, err := store.NewCollection("test", sdstore.WithInit(Record{}))
+	c, err := store.Collection("test", Record{})
 	if err != nil {
 		t.Fatalf("%s\tShould be able to create a new collection: %v.", failed, err)
 	}
@@ -107,7 +107,7 @@ func TestStore(t *testing.T) {
 }
 
 func TestIndexedCollection(t *testing.T) {
-	t.Cleanup(func() { os.RemoveAll("/tmp/store") })
+	t.Cleanup(func() { os.RemoveAll("/tmp/test") })
 
 	store, err := sdstore.New("store", "/tmp/test")
 	if err != nil {
@@ -115,7 +115,7 @@ func TestIndexedCollection(t *testing.T) {
 	}
 	t.Logf("%s\tShould be able to create a new store.", success)
 
-	c, err := store.NewCollection("test", "/tmp/store", sdstore.WithIndexedFields("Email"), sdstore.WithInit(Record{}))
+	c, err := store.Collection("test", Record{}, sdstore.WithIndexedFields("Email"))
 	if err != nil {
 		t.Fatalf("%s\tShould be able to create a new collection: %v.", failed, err)
 	}
@@ -194,7 +194,7 @@ func TestIndexedCollection(t *testing.T) {
 	}
 	t.Logf("%s\tShould get expected result.", success)
 
-	c2, err := sdstore.NewCollection("test", "/tmp/store", sdstore.WithIndexedFields("Email"), sdstore.WithInit(Record{}))
+	c2, err := store.Collection("test", Record{}, sdstore.WithIndexedFields("Email"))
 	if err != nil {
 		t.Fatalf("%s\tShould be able to create another collection: %v.", failed, err)
 	}
@@ -216,4 +216,62 @@ func TestIndexedCollection(t *testing.T) {
 		t.Fatalf("%s\tShould get ErrNotFound when getting an deleted object: %v.", failed, err)
 	}
 	t.Logf("%s\tShould get ErrNotFound when getting an deleted object.", success)
+}
+
+func TestPagination(t *testing.T) {
+	t.Cleanup(func() { os.RemoveAll("/tmp/pgstore") })
+
+	store, err := sdstore.New("store", "/tmp/pgstore")
+	if err != nil {
+		t.Fatalf("%s\tShould be able to create a new store: %v.", failed, err)
+	}
+	t.Logf("%s\tShould be able to create a new store.", success)
+
+	c, err := store.Collection("test", Record{})
+	if err != nil {
+		t.Fatalf("%s\tShould be able to create a new collection: %v.", failed, err)
+	}
+	t.Logf("%s\tShould be able to create a new collection.", success)
+
+	rec1 := Record{
+		ID:    "1",
+		Name:  "Test",
+		Email: "test1@example.com",
+	}
+
+	rec2 := Record{
+		ID:    "2",
+		Name:  "Test",
+		Email: "test2@example.com",
+	}
+
+	if err := c.Create(rec1.ID, rec1); err != nil {
+		t.Fatalf("%s\tShould be able to create an object in the collection: %v.", failed, err)
+	}
+	t.Logf("%s\tShould be able to create an object in the collection.", success)
+
+	if err := c.Create(rec2.ID, rec2); err != nil {
+		t.Fatalf("%s\tShould be able to create another object in the collection: %v.", failed, err)
+	}
+	t.Logf("%s\tShould be able to create another object in the collection.", success)
+
+	recs, err := c.QueryPaginated(func(rec any) bool {
+		return true
+	}, 1, 1)
+	if err != nil {
+		t.Fatalf("%s\tShould be able to query from the collection: %v.", failed, err)
+	}
+	t.Logf("%s\tShould be able to query from the collection.", success)
+
+	if l := len(recs); l != 1 {
+		t.Fatalf("%s\tShould get 1 record, but got: %v.", failed, l)
+	}
+	t.Logf("%s\tShould get 1 record.", success)
+
+	got := *(recs[0].(*Record))
+	exp := rec1
+	if diff := cmp.Diff(got, exp); diff != "" {
+		t.Fatalf("%s\tShould get expected result: %v.", failed, diff)
+	}
+	t.Logf("%s\tShould get expected result.", success)
 }

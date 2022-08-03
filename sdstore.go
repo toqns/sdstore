@@ -40,10 +40,10 @@ func WithJSONEncoding() StoreOption {
 	return WithEncoding(EncodeFunc(json.Marshal), DecodeFunc(json.Unmarshal))
 }
 
-// WithGobEncoding is an option to set Gob encoding of records.
-func WithGobEncoding() StoreOption {
-	g := GobEncoder{}
-	return WithEncoding(g, g)
+// WithCborEncoding is an option to set Gob encoding of records.
+func WithCborEncoding() StoreOption {
+	e := NewCborEncoder()
+	return WithEncoding(e, e)
 }
 
 // New returns an initialized store with json encoding as default.
@@ -57,7 +57,7 @@ func New(name string, path string, opts ...StoreOption) (*SDStore, error) {
 	}
 
 	// Set Gob encoding as the default and loop over options.
-	WithGobEncoding()(&store)
+	WithCborEncoding()(&store)
 	for _, opt := range opts {
 		opt(&store)
 	}
