@@ -87,5 +87,5 @@ func (s *SDStore) Collection(name string, record any, opts ...CollectionOption) 
 	}
 	options = append(options, opts...)
 
-	return newCollection(name, s.Path, record, options...).Init()
+	return newCollection(name, filepath.Join(s.Path, s.Name), record, options...).Init()
 }

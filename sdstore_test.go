@@ -3,7 +3,9 @@ package sdstore_test
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/toqns/sdstore"
@@ -14,6 +16,57 @@ const (
 	success = "\u2713"
 	failed  = "\u2717"
 )
+
+func TestDirectory(t *testing.T) {
+	dbName := fmt.Sprintf("%d", time.Now().UTC().Unix())
+	path := fmt.Sprintf("/tmp/%d", time.Now().UTC().Unix())
+	collection := fmt.Sprintf("%d", time.Now().UTC().Unix())
+	dbPath := filepath.Join(path, dbName)
+	collectionPath := filepath.Join(dbPath, collection)
+
+	t.Cleanup(func() {
+		os.RemoveAll(collectionPath)
+		os.RemoveAll(dbPath)
+	})
+
+	sds, err := sdstore.New(dbName, path)
+	if err != nil {
+		t.Fatalf("%s\tShould be able to create a new store: %v.", failed, err)
+	}
+	t.Logf("%s\tShould be able to create a new store.", success)
+
+	{
+		info, err := os.Stat(dbPath)
+		if err != nil {
+			t.Fatalf("%s\tShould be able to get db dir: %v.", failed, err)
+		}
+		t.Logf("%s\tShould be able to get db dir.", success)
+
+		if !info.IsDir() {
+			t.Fatalf("%s\tShould be a directory: %v.", failed, err)
+		}
+		t.Logf("%s\tShould be a directory.", success)
+	}
+
+	{
+		_, err := sds.Collection(collection, struct{}{})
+		if err != nil {
+			t.Fatalf("%s\tShould be able to create a new collection: %v.", failed, err)
+		}
+		t.Logf("%s\tShould be able to create a new collection.", success)
+
+		info, err := os.Stat(collectionPath)
+		if err != nil {
+			t.Fatalf("%s\tShould be able to get collection dir: %v.", failed, err)
+		}
+		t.Logf("%s\tShould be able to get collection dir.", success)
+
+		if !info.IsDir() {
+			t.Fatalf("%s\tShould be a directory: %v.", failed, err)
+		}
+		t.Logf("%s\tShould be a directory.", success)
+	}
+}
 
 type Record struct {
 	ID    string
@@ -102,7 +155,6 @@ func testDefaultStore(t *testing.T, store *sdstore.SDStore) func(t *testing.T) {
 			if !ok {
 				return false
 			}
-			fmt.Println(rec)
 
 			return rec.ID == "1"
 		})
