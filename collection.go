@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -160,13 +159,13 @@ func (c *Collection) save(filename string, data []byte) error {
 		return ErrNotInitialized
 	}
 
-	return ioutil.WriteFile(filename, data, 0600)
+	return os.WriteFile(filename, data, 0600)
 
 }
 
 // load returns the content of the provided filename as a slice of bytes.
 func (c *Collection) load(filename string) ([]byte, error) {
-	return ioutil.ReadFile(filename)
+	return os.ReadFile(filename)
 }
 
 // exists returns true if the provided path exists.

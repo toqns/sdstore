@@ -40,9 +40,21 @@ func WithJSONEncoding() StoreOption {
 	return WithEncoding(EncodeFunc(json.Marshal), DecodeFunc(json.Unmarshal))
 }
 
-// WithCborEncoding is an option to set Gob encoding of records.
+// WithCborEncoding is an option to set CBOR encoding of records.
 func WithCborEncoding() StoreOption {
 	e := NewCborEncoder()
+	return WithEncoding(e, e)
+}
+
+// WithMsgpackEncoding is an option to set Msgpack encoding of records.
+func WithMsgpackEncoding() StoreOption {
+	e := NewMsgpackEncoder()
+	return WithEncoding(e, e)
+}
+
+// WithBincEncoding is an option to set Binc encoding of records.
+func WithBincEncoding() StoreOption {
+	e := NewBincEncoder()
 	return WithEncoding(e, e)
 }
 
