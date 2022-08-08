@@ -416,7 +416,7 @@ func (c *Collection) QueryPaginated(f func(any) bool, page int, rows int) (res [
 	}
 	// Return everything if page and row are 0.
 	if page == 0 && rows == 0 {
-		return res, 0, nil
+		return recs, 0, nil
 	}
 
 	// Check the pagination request.
