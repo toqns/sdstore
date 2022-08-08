@@ -15,11 +15,13 @@ import (
 )
 
 // IndexedValueNotUniqueError is an error indicating that the value of an indexed field is not unique.
-type IndexedValueNotUniqueError string
+type IndexedValueNotUniqueError struct {
+	Field string
+}
 
 // Error implements the Error interface for IndexedValueNotUniqueError
 func (err *IndexedValueNotUniqueError) Error() string {
-	return fmt.Sprintf("%q is not unique", *err)
+	return fmt.Sprintf("%q is not unique", err.Field)
 }
 
 var (
@@ -345,7 +347,7 @@ func (c *Collection) Create(id string, data any) error {
 
 		// Return an error if the field/value combination is not unique.
 		if c.existsIndexed(fld, v) {
-			err := IndexedValueNotUniqueError(fld)
+			err := IndexedValueNotUniqueError{Field: fld}
 			return &err
 		}
 
