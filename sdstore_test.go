@@ -334,13 +334,18 @@ func testPagination(t *testing.T, store *sdstore.SDStore) func(t *testing.T) {
 		}
 		t.Logf("%s\tShould be able to create another object in the collection.", success)
 
-		recs, err := c.QueryPaginated(func(rec any) bool {
+		recs, pages, err := c.QueryPaginated(func(rec any) bool {
 			return true
 		}, 1, 1)
 		if err != nil {
 			t.Fatalf("%s\tShould be able to query from the collection: %v.", failed, err)
 		}
 		t.Logf("%s\tShould be able to query from the collection.", success)
+
+		if pages != 2 {
+			t.Fatalf("%s\tShould get 2 pages, but got: %v.", failed, pages)
+		}
+		t.Logf("%s\tShould get 2 pages.", success)
 
 		if l := len(recs); l != 1 {
 			t.Fatalf("%s\tShould get 1 record, but got: %v.", failed, l)

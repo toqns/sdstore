@@ -403,23 +403,23 @@ func (c *Collection) Query(f func(any) bool) (res []any, err error) {
 	return res, nil
 }
 
-func (c *Collection) QueryPaginated(f func(any) bool, page int, rows int) (res []any, err error) {
+func (c *Collection) QueryPaginated(f func(any) bool, page int, rows int) (res []any, pages int, err error) {
 	if !c.initialized {
-		return nil, ErrNotInitialized
+		return nil, 0, ErrNotInitialized
 	}
 
 	recs, err := c.Query(f)
 	if err != nil {
-		return res, err
+		return res, 0, err
 	}
 	// Return everything if page and row are 0.
 	if page == 0 && rows == 0 {
-		return res, nil
+		return res, 0, nil
 	}
 
 	// Check the pagination request.
 	count := len(recs)
-	pages := count / rows
+	pages = count / rows
 	if count%rows != 0 {
 		pages++
 	}
@@ -437,7 +437,7 @@ func (c *Collection) QueryPaginated(f func(any) bool, page int, rows int) (res [
 		to = count
 	}
 
-	return recs[from:to], nil
+	return recs[from:to], pages, nil
 }
 
 // Get receives a record from disk by the provided ID
